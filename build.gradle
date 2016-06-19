@@ -7,6 +7,16 @@ apply plugin: 'application'
 sourceCompatibility = 1.8
 mainClassName = "com.krld.Main"
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.krld.Main'
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
 sourceSets {
     main {
         java {
