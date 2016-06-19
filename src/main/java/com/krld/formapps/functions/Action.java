@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.krld.support.functions;
+package com.krld.formapps.functions;
 
 /**
- * A zero-argument action.
+ * All Action interfaces extend from this.
+ * <p>
+ * Marker interface to allow instanceof checks.
  */
-public interface Action0 extends Action {
-    void call();
+public interface Action extends Function {
+
 }

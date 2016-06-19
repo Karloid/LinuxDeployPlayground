@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.krld.support.functions;
+package com.krld.formapps.functions;
 
 /**
- * Represents a function with one argument.
- * @param <T> the first argument type
- * @param <R> the result type
+ * A vector-argument action.
  */
-public interface Func1<T, R> extends Function {
-    R call(T t);
+public interface ActionN extends Action {
+    void call(Object... args);
 }

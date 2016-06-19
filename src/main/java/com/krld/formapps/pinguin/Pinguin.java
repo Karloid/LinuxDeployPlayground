@@ -2,8 +2,6 @@ package com.krld.formapps.pinguin;
 
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.SimpleTheme;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.table.Table;
@@ -14,6 +12,7 @@ import com.googlecode.lanterna.terminal.Terminal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +27,7 @@ public class Pinguin {
     private Button buttonStart;
     private Button buttonEnd;
     private Table<String> table;
+    private String sessionUUID;
 
     public void run() {
 
@@ -71,7 +71,6 @@ public class Pinguin {
         panel.addComponent(hostnameBorder);
 
         table = new Table<>("Hostname", "Time Start", "Duration", "Period", "Result");
-
         Border tableWithBorder = table.withBorder(Borders.singleLine("Requests"));
         tableWithBorder.setSize(new TerminalSize(panel.getPreferredSize().getColumns() - 5, panel.getPreferredSize().getRows() - 8));
         tableWithBorder.setPosition(new TerminalPosition(hostnameBorder.getPosition().getColumn(), hostnameBorder.getPosition().getRow() + 4));
@@ -107,6 +106,7 @@ public class Pinguin {
         stageQueue.submit(() -> {
             if (isRunning) {
                 setIsRunning(false);
+                sessionUUID = "no uuid";
             } else {
                 MessageDialog.showMessageDialog(gui, "Error", "Already stopped!");
             }
@@ -119,7 +119,7 @@ public class Pinguin {
                 MessageDialog.showMessageDialog(gui, "Error", "Already running!");
             } else {
                 setIsRunning(true);
-
+                sessionUUID = UUID.randomUUID().toString();
                 doPingServer();
             }
         });
@@ -136,7 +136,7 @@ public class Pinguin {
                         .sendPing(
                                 (call, response) -> {
                                     stageQueue.submit(() -> {
-                                       //TODO
+                                        //TODO
                                     });
                                 },
                                 (call, e) -> {
@@ -145,7 +145,8 @@ public class Pinguin {
                                         System.out.println("error: " + e.getClass().getCanonicalName() + " " + e.getLocalizedMessage());
                                     });
                                 },
-                                textHostname.getText());
+                                textHostname.getText(),
+                                sessionUUID);
             } catch (Exception e) {
                 e.printStackTrace();
             }

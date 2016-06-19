@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.krld.support.functions;
+package com.krld.formapps.functions;
 
 /**
- * Represents a function with three arguments.
- * @param <T1> the first argument type
- * @param <T2> the second argument type
- * @param <T3> the third argument type
+ * Represents a function with one argument.
+ * @param <T> the first argument type
  * @param <R> the result type
  */
-public interface Func3<T1, T2, T3, R> extends Function {
-    R call(T1 t1, T2 t2, T3 t3);
+public interface Func1<T, R> extends Function {
+    R call(T t);
 }

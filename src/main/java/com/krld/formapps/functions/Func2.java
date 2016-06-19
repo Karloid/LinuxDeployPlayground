@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.krld.support.functions;
-
-import java.util.concurrent.Callable;
+package com.krld.formapps.functions;
 
 /**
- * Represents a function with zero arguments.
+ * Represents a function with two arguments.
+ * @param <T1> the first argument type
+ * @param <T2> the second argument type
  * @param <R> the result type
  */
-public interface Func0<R> extends Function, Callable<R> {
-    @Override
-    R call();
+public interface Func2<T1, T2, R> extends Function {
+    R call(T1 t1, T2 t2);
 }

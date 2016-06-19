@@ -39,4 +39,5 @@ dependencies {
     compile 'com.googlecode.lanterna:lanterna:3.0.0-beta3'
     compile 'com.squareup.okio:okio:1.8.0'
     compile 'com.squareup.okhttp3:okhttp:3.3.1'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
 }

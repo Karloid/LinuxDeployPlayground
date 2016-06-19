@@ -1,6 +1,6 @@
 package com.krld.formapps.pinguin;
 
-import com.krld.support.functions.Action2;
+import com.krld.formapps.functions.Action2;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class WebClient {
         return instance;
     }
 
-    public void sendPing(Action2<Call, Response> success, Action2<Call, IOException> failure, String hostname) {
+    public void sendPing(Action2<Call, Response> success, Action2<Call, IOException> failure, String hostname, String sessionUUID) {
         post("http://" + hostname + ":9090/ping", "lol", success, failure);
     }
 

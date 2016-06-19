@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.krld.support.functions;
+package com.krld.formapps.functions;
 
 /**
- * All Action interfaces extend from this.
- * <p>
- * Marker interface to allow instanceof checks.
+ * Represents a function with four arguments.
+ * @param <T1> the first argument type
+ * @param <T2> the second argument type
+ * @param <T3> the third argument type
+ * @param <T4> the fourth argument type
+ * @param <R> the result type
  */
-public interface Action extends Function {
-
+public interface Func4<T1, T2, T3, T4, R> extends Function {
+    R call(T1 t1, T2 t2, T3 t3, T4 t4);
 }

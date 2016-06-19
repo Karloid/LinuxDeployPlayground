@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.krld.support.functions;
+package com.krld.formapps.functions;
 
 /**
- * A one-argument action.
- * @param <T> the first argument type
+ * A zero-argument action.
  */
-public interface Action1<T> extends Action {
-    void call(T t);
+public interface Action0 extends Action {
+    void call();
 }
