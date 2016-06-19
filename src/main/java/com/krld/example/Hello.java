@@ -1,4 +1,4 @@
-package com.krld;
+package com.krld.example;
 
 public class Hello {
     public String getHello() {
