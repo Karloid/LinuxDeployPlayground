@@ -4,6 +4,7 @@ import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
+import com.googlecode.lanterna.gui2.table.DefaultTableCellRenderer;
 import com.googlecode.lanterna.gui2.table.Table;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
@@ -11,7 +12,9 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,7 +30,9 @@ public class Pinguin {
     private Button buttonStart;
     private Button buttonEnd;
     private Table<String> table;
-    private String sessionUUID;
+
+    private String currentSessionUUID;
+    private int currentRequestIndex;
 
     public void run() {
 
@@ -39,6 +44,7 @@ public class Pinguin {
         }
         stageQueue.shutdown();
         System.out.println("end of main thread");
+        System.exit(0);
     }
 
     private void createGui() throws IOException {
@@ -64,15 +70,15 @@ public class Pinguin {
 
         textHostname = new TextBox("192.168.0.6");
         textHostname.setSize(new TerminalSize(15, 1));
-        //textHostname.setPosition(new TerminalPosition(2, buttonStart.getPosition().getRow() + 3));
         Border hostnameBorder = textHostname.withBorder(Borders.singleLine("Hostname"));
         hostnameBorder.setSize(new TerminalSize(15, 3));
         hostnameBorder.setPosition(new TerminalPosition(2, buttonStart.getPosition().getRow() + 2));
         panel.addComponent(hostnameBorder);
 
-        table = new Table<>("Hostname", "Time Start", "Duration", "Period", "Result");
+        table = new Table<>("index", "Hostname", "Time Start", "Duration", "Period", "Result");
+        table.setTableCellRenderer(new DefaultTableCellRenderer<>());//TODO red fail rows
         Border tableWithBorder = table.withBorder(Borders.singleLine("Requests"));
-        tableWithBorder.setSize(new TerminalSize(panel.getPreferredSize().getColumns() - 5, panel.getPreferredSize().getRows() - 8));
+        tableWithBorder.setSize(new TerminalSize(panel.getPreferredSize().getColumns() - 4, panel.getPreferredSize().getRows() - 8));
         tableWithBorder.setPosition(new TerminalPosition(hostnameBorder.getPosition().getColumn(), hostnameBorder.getPosition().getRow() + 4));
         table.setSize(new TerminalSize(tableWithBorder.getSize().getColumns() - 2, tableWithBorder.getSize().getRows() - 2));
         table.setVisibleRows(table.getSize().getRows() - 1);
@@ -92,21 +98,27 @@ public class Pinguin {
         gui.waitForWindowToClose(mainWindow);
     }
 
-    private void addRow() {
+    private void addRow(String id, String hostname, String timeStart, String duration, String period, String result) {
         ArrayList<String> row = new ArrayList<>();
-        row.add("d");
-        row.add("d");
-        row.add("d");
-        row.add("d");
-        row.add("d");
+        row.add(id);
+        row.add(hostname);
+        row.add(timeStart);
+        row.add(duration);
+        row.add(period);
+        row.add(result);
         table.getTableModel().insertRow(0, row);
+
+        int rowCount = table.getTableModel().getRowCount();
+        if (rowCount > 50) {
+            table.getTableModel().removeRow(rowCount - 1);
+        }
     }
 
     private void stop() {
         stageQueue.submit(() -> {
             if (isRunning) {
                 setIsRunning(false);
-                sessionUUID = "no uuid";
+                textHostname.setEnabled(true);
             } else {
                 MessageDialog.showMessageDialog(gui, "Error", "Already stopped!");
             }
@@ -119,7 +131,9 @@ public class Pinguin {
                 MessageDialog.showMessageDialog(gui, "Error", "Already running!");
             } else {
                 setIsRunning(true);
-                sessionUUID = UUID.randomUUID().toString();
+                textHostname.setEnabled(false);
+                currentSessionUUID = UUID.randomUUID().toString();
+                currentRequestIndex = 0;
                 doPingServer();
             }
         });
@@ -131,22 +145,31 @@ public class Pinguin {
                 return;
             }
             try {
-                System.out.println("do ping server");
+                String hostname = textHostname.getText();
+                Date startDate = new Date();
+                int index = currentRequestIndex;
+                currentRequestIndex++;
                 WebClient.getInstance()
                         .sendPing(
-                                (call, response) -> {
+                                (call, response, e) -> {
                                     stageQueue.submit(() -> {
                                         //TODO
+                                        Date endDate = new Date();
+                                        new SimpleDateFormat("hh:mm:ss");
+                                        String result = "OK";
+                                        if (e != null) {
+                                            result = e.getClass().getSimpleName();
+                                        }
+                                        addRow(String.valueOf(index), hostname,
+                                                new SimpleDateFormat("hh:mm:ss").format(startDate),
+                                                String.valueOf(endDate.getTime() - startDate.getTime()),
+                                                "1000", //TODO
+                                                result);
                                     });
                                 },
-                                (call, e) -> {
-                                    stageQueue.submit(() -> {
-                                        addRow();
-                                        System.out.println("error: " + e.getClass().getCanonicalName() + " " + e.getLocalizedMessage());
-                                    });
-                                },
-                                textHostname.getText(),
-                                sessionUUID);
+                                hostname,
+                                currentSessionUUID,
+                                index);
             } catch (Exception e) {
                 e.printStackTrace();
             }

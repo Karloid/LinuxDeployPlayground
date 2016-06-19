@@ -77,19 +77,6 @@ public class ExampleFormApp {
         window.setTitle("Calculator");
         window.setHints(Arrays.asList(Window.Hint.CENTERED));
 
-     /*   new Thread(() -> {
-            int i = 0;
-            while (true) {
-                try {
-                    Thread.sleep(16);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                buttonTest.setLabel("" + i);
-                i++;
-            }
-        }).start();*/
-
         MultiWindowTextGUI gui = new MultiWindowTextGUI(createScreen(), new DefaultWindowManager(), new EmptySpace(TextColor.ANSI.CYAN));
         gui.addWindowAndWait(window);
     }
