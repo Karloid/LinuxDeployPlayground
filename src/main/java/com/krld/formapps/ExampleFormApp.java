@@ -14,6 +14,10 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public class ExampleFormApp {
+
+    private BasicWindow window;
+    private Terminal terminal;
+
     public void run() {
         try {
             runSumForm();
@@ -58,19 +62,22 @@ public class ExampleFormApp {
             }
         }).addTo(panel);
 
-        Button buttonTest = new Button("Test", () -> System.out.println("Test pressed"));
+        Button buttonTest = new Button("Test", () -> {
+            window.close();
+            window = null;
+        });
 
         panel.addComponent(buttonTest);
         panel.addComponent(new EmptySpace(new TerminalSize(0, 0)));
         panel.addComponent(lblOutput);
 
         // Create window to hold the panel
-        BasicWindow window = new BasicWindow();
+        window = new BasicWindow();
         window.setComponent(panel);
         window.setTitle("Calculator");
         window.setHints(Arrays.asList(Window.Hint.CENTERED));
 
-        new Thread(() -> {
+     /*   new Thread(() -> {
             int i = 0;
             while (true) {
                 try {
@@ -81,14 +88,14 @@ public class ExampleFormApp {
                 buttonTest.setLabel("" + i);
                 i++;
             }
-        }).start();
+        }).start();*/
 
         MultiWindowTextGUI gui = new MultiWindowTextGUI(createScreen(), new DefaultWindowManager(), new EmptySpace(TextColor.ANSI.CYAN));
         gui.addWindowAndWait(window);
     }
 
     private Screen createScreen() throws IOException {
-        Terminal terminal = new DefaultTerminalFactory().createTerminal();
+        terminal = new DefaultTerminalFactory().createTerminal();
         Screen screen = new TerminalScreen(terminal);
         screen.startScreen();
         return screen;

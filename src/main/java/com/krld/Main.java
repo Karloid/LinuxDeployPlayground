@@ -7,6 +7,7 @@ import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
+import com.krld.formapps.App;
 import com.krld.formapps.ExampleFormApp;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        new ExampleFormApp().run();
+        // new ExampleFormApp().run();
+        new App().run();
     }
 }
