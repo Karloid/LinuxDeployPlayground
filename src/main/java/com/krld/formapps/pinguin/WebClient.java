@@ -1,4 +1,4 @@
-package com.krld.formapps;
+package com.krld.formapps.pinguin;
 
 import com.krld.support.functions.Action2;
 import okhttp3.*;
