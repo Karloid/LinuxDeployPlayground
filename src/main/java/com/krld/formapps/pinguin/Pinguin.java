@@ -6,6 +6,7 @@ import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.table.DefaultTableCellRenderer;
 import com.googlecode.lanterna.gui2.table.Table;
+import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -14,6 +15,7 @@ import com.googlecode.lanterna.terminal.Terminal;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -38,6 +40,7 @@ public class Pinguin {
     private String currentSessionUUID;
     private int currentRequestIndex;
     private Integer currentPeriod;
+    private Button buttonAppClose;
 
     public void run() {
 
@@ -59,16 +62,17 @@ public class Pinguin {
         screen.startScreen();
 
         gui = new MultiWindowTextGUI(screen);
-
+        gui.addListener(new KeysListener());
         Panel panel = new Panel(new AbsoluteLayout());
         panel.setPreferredSize(new TerminalSize(72, 18));
+
 
         buttonStart = new Button("Start", this::start);
         buttonStart.setSize(new TerminalSize(8, 1));
         buttonStart.setPosition(new TerminalPosition(2, 1));
         panel.addComponent(buttonStart);
 
-        buttonEnd = new Button("Stop", this::stop);
+        buttonEnd = new Button("End", this::stop);
         buttonEnd.setSize(new TerminalSize(8, 1));
         buttonEnd.setPosition(new TerminalPosition(2 + 8 + 2, 1));
         panel.addComponent(buttonEnd);
@@ -97,15 +101,15 @@ public class Pinguin {
         table.setVisibleRows(table.getSize().getRows() - 1);
         panel.addComponent(tableWithBorder);
 
-        Button buttonAppClose = new Button("Close", this::finishAndClose);
+        buttonAppClose = new Button("Close", this::finishAndClose);
         buttonAppClose.setSize(new TerminalSize(8, 1));
         buttonAppClose.setPosition(new TerminalPosition(panel.getPreferredSize().getColumns() - 10, 1));
         panel.addComponent(buttonAppClose);
 
         mainWindow = new BasicWindow();
         mainWindow.setComponent(panel);
+        mainWindow.setHints(Arrays.asList(Window.Hint.CENTERED));
         gui.addWindow(mainWindow);
-        mainWindow.setPosition(new TerminalPosition(2, 1));
 
         setIsRunning(false);
         gui.waitForWindowToClose(mainWindow);
@@ -232,5 +236,29 @@ public class Pinguin {
             mainWindow.setTitle("Pinguin: STOPPED");
         }
 
+    }
+
+    private class KeysListener implements TextGUI.Listener {
+        @Override
+        public boolean onUnhandledKeyStroke(TextGUI textGUI, KeyStroke keyStroke) {
+            if (keyStroke.getCharacter() == 's' || keyStroke.getCharacter() == 'S') { //TODO rework
+                buttonStart.takeFocus();
+                Pinguin.this.start();
+                return true;
+            }
+
+            if (keyStroke.getCharacter() == 'c' || keyStroke.getCharacter() == 'C') { //TODO rework
+                buttonAppClose.takeFocus();
+                finishAndClose();
+                return true;
+            }
+
+            if (keyStroke.getCharacter() == 'e' || keyStroke.getCharacter() == 'E') { //TODO rework
+                buttonEnd.takeFocus();
+                stop();
+                return true;
+            }
+            return false;
+        }
     }
 }
