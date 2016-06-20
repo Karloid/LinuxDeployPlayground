@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class Pinguin {
 
@@ -80,6 +81,7 @@ public class Pinguin {
         panel.addComponent(hostnameBorder);
 
         textPeriod = new TextBox("1000");
+        textPeriod.setValidationPattern(Pattern.compile("[0-9]*"));
         textPeriod.setSize(new TerminalSize(13, 1));
         Border periodBorder = textPeriod.withBorder(Borders.singleLine("Period"));
         periodBorder.setSize(new TerminalSize(15, 3));
@@ -171,7 +173,12 @@ public class Pinguin {
                     String currentPeriodText = textPeriod.getText();
                     if (currentPeriodText.length() == 0) {
                         currentPeriodText = "0";
+                        textPeriod.setText(currentPeriodText);
+                    } else if (currentPeriodText.length() > 6) {  //TODO edit regexp to limit length
+                        currentPeriodText = currentPeriodText.substring(0, 7);
+                        textPeriod.setText(currentPeriodText);
                     }
+
                     currentPeriod = Integer.valueOf(currentPeriodText);
                 }
 
@@ -191,6 +198,9 @@ public class Pinguin {
                                                 String.valueOf(endDate.getTime() - startDate.getTime()),
                                                 String.valueOf(currentPeriod), //TODO
                                                 result);
+                                        if (isRunning) {
+                                            stageQueue.schedule(this::doPingServer, currentPeriod, TimeUnit.MILLISECONDS);
+                                        }
                                     });
                                 },
                                 hostname,
@@ -198,8 +208,9 @@ public class Pinguin {
                                 index);
             } catch (Exception e) {
                 e.printStackTrace();
+                stop();
+                MessageDialog.showMessageDialog(gui, "Error occurs", e.getClass().getCanonicalName() + ": " + e.getLocalizedMessage());
             }
-            stageQueue.schedule(this::doPingServer, currentPeriod, TimeUnit.MILLISECONDS);
         });
     }
 
