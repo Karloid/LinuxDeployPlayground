@@ -151,6 +151,7 @@ public class Pinguin {
                 setIsRunning(false);
                 textHostname.setEnabled(true);
                 textPeriod.setEnabled(true);
+                textPort.setEnabled(true);
             } else {
                 MessageDialog.showMessageDialog(gui, "Error", "Already stopped!");
             }
@@ -165,6 +166,7 @@ public class Pinguin {
                 setIsRunning(true);
                 textHostname.setEnabled(false);
                 textPeriod.setEnabled(false);
+                textPort.setEnabled(false);
                 currentSessionUUID = UUID.randomUUID().toString();
                 currentRequestIndex = 0;
                 currentPeriod = -1;
