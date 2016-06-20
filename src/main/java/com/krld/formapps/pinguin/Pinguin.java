@@ -22,17 +22,21 @@ import java.util.concurrent.TimeUnit;
 
 public class Pinguin {
 
+    public static final int MAX_ROWS_IN_TABLE = 50;
     private BasicWindow mainWindow;
     private ScheduledExecutorService stageQueue;
     private WindowBasedTextGUI gui;
-    private volatile boolean isRunning;
+
     private TextBox textHostname;
     private Button buttonStart;
     private Button buttonEnd;
+    private TextBox textPeriod;
     private Table<String> table;
 
+    private volatile boolean isRunning;
     private String currentSessionUUID;
     private int currentRequestIndex;
+    private Integer currentPeriod;
 
     public void run() {
 
@@ -69,13 +73,20 @@ public class Pinguin {
         panel.addComponent(buttonEnd);
 
         textHostname = new TextBox("192.168.0.6");
-        textHostname.setSize(new TerminalSize(15, 1));
+        textHostname.setSize(new TerminalSize(13, 1));
         Border hostnameBorder = textHostname.withBorder(Borders.singleLine("Hostname"));
         hostnameBorder.setSize(new TerminalSize(15, 3));
         hostnameBorder.setPosition(new TerminalPosition(2, buttonStart.getPosition().getRow() + 2));
         panel.addComponent(hostnameBorder);
 
-        table = new Table<>("index", "Hostname", "Time Start", "Duration", "Period", "Result");
+        textPeriod = new TextBox("1000");
+        textPeriod.setSize(new TerminalSize(13, 1));
+        Border periodBorder = textPeriod.withBorder(Borders.singleLine("Period"));
+        periodBorder.setSize(new TerminalSize(15, 3));
+        periodBorder.setPosition(new TerminalPosition(2 + 15 + 2, buttonStart.getPosition().getRow() + 2));
+        panel.addComponent(periodBorder);
+
+        table = new Table<>("index", "Hostname", "Start at", "Duration", "Period", "Result");
         table.setTableCellRenderer(new DefaultTableCellRenderer<>());//TODO red fail rows
         Border tableWithBorder = table.withBorder(Borders.singleLine("Requests"));
         tableWithBorder.setSize(new TerminalSize(panel.getPreferredSize().getColumns() - 4, panel.getPreferredSize().getRows() - 8));
@@ -109,8 +120,11 @@ public class Pinguin {
         table.getTableModel().insertRow(0, row);
 
         int rowCount = table.getTableModel().getRowCount();
-        if (rowCount > 50) {
+        if (rowCount > MAX_ROWS_IN_TABLE) {
             table.getTableModel().removeRow(rowCount - 1);
+        }
+        if (table.getSelectedRow() != 0 && table.getSelectedRow() < MAX_ROWS_IN_TABLE - 1) {
+            table.setSelectedRow(table.getSelectedRow() + 1);
         }
     }
 
@@ -119,6 +133,7 @@ public class Pinguin {
             if (isRunning) {
                 setIsRunning(false);
                 textHostname.setEnabled(true);
+                textPeriod.setEnabled(true);
             } else {
                 MessageDialog.showMessageDialog(gui, "Error", "Already stopped!");
             }
@@ -132,8 +147,10 @@ public class Pinguin {
             } else {
                 setIsRunning(true);
                 textHostname.setEnabled(false);
+                textPeriod.setEnabled(false);
                 currentSessionUUID = UUID.randomUUID().toString();
                 currentRequestIndex = 0;
+                currentPeriod = -1;
                 doPingServer();
             }
         });
@@ -149,6 +166,15 @@ public class Pinguin {
                 Date startDate = new Date();
                 int index = currentRequestIndex;
                 currentRequestIndex++;
+
+                if (currentPeriod == -1) {
+                    String currentPeriodText = textPeriod.getText();
+                    if (currentPeriodText.length() == 0) {
+                        currentPeriodText = "0";
+                    }
+                    currentPeriod = Integer.valueOf(currentPeriodText);
+                }
+
                 WebClient.getInstance()
                         .sendPing(
                                 (call, response, e) -> {
@@ -163,7 +189,7 @@ public class Pinguin {
                                         addRow(String.valueOf(index), hostname,
                                                 new SimpleDateFormat("hh:mm:ss").format(startDate),
                                                 String.valueOf(endDate.getTime() - startDate.getTime()),
-                                                "1000", //TODO
+                                                String.valueOf(currentPeriod), //TODO
                                                 result);
                                     });
                                 },
@@ -173,7 +199,7 @@ public class Pinguin {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            stageQueue.schedule(this::doPingServer, 1000, TimeUnit.MILLISECONDS);
+            stageQueue.schedule(this::doPingServer, currentPeriod, TimeUnit.MILLISECONDS);
         });
     }
 
