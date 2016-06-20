@@ -41,6 +41,8 @@ public class Pinguin {
     private int currentRequestIndex;
     private Integer currentPeriod;
     private Button buttonAppClose;
+    private TextBox textPort;
+    private int currentPort;
 
     public void run() {
 
@@ -84,13 +86,22 @@ public class Pinguin {
         hostnameBorder.setPosition(new TerminalPosition(2, buttonStart.getPosition().getRow() + 2));
         panel.addComponent(hostnameBorder);
 
+        textPort = new TextBox("9090");
+        textPort.setValidationPattern(Pattern.compile("[0-9]*"));
+        textPort.setSize(new TerminalSize(13, 1));
+        Border portBorder = textPort.withBorder(Borders.singleLine("Port"));
+        portBorder.setSize(new TerminalSize(15, 3));
+        portBorder.setPosition(new TerminalPosition(2 + 15 + 2, buttonStart.getPosition().getRow() + 2));
+        panel.addComponent(portBorder);
+
         textPeriod = new TextBox("1000");
         textPeriod.setValidationPattern(Pattern.compile("[0-9]*"));
         textPeriod.setSize(new TerminalSize(13, 1));
         Border periodBorder = textPeriod.withBorder(Borders.singleLine("Period"));
         periodBorder.setSize(new TerminalSize(15, 3));
-        periodBorder.setPosition(new TerminalPosition(2 + 15 + 2, buttonStart.getPosition().getRow() + 2));
+        periodBorder.setPosition(new TerminalPosition(2 + 15 + 2 + 15 + 2, buttonStart.getPosition().getRow() + 2));
         panel.addComponent(periodBorder);
+
 
         table = new Table<>("index", "Hostname", "Start at", "Duration", "Period", "Result");
         table.setTableCellRenderer(new DefaultTableCellRenderer<>());//TODO red fail rows
@@ -157,6 +168,7 @@ public class Pinguin {
                 currentSessionUUID = UUID.randomUUID().toString();
                 currentRequestIndex = 0;
                 currentPeriod = -1;
+                currentPort = -1;
                 doPingServer();
             }
         });
@@ -186,30 +198,52 @@ public class Pinguin {
                     currentPeriod = Integer.valueOf(currentPeriodText);
                 }
 
+                Integer currentPeriodCopy = this.currentPeriod;
+
+
+                if (currentPort == -1) {
+                    String currentPortText = textPort.getText();
+                    if (currentPortText.length() == 0) {
+                        currentPortText = "80";
+                    } else if (currentPortText.length() > 5) {  //TODO edit regexp to limit length
+                        currentPortText = currentPortText.substring(0, 5);
+                    }
+                    if (Integer.valueOf(currentPortText) > 65535) {
+                        currentPortText = "65535";
+                    }
+                    textPort.setText(currentPortText);
+                    currentPort = Integer.valueOf(currentPortText);
+                }
+
                 WebClient.getInstance()
                         .sendPing(
                                 (call, response, e) -> {
                                     stageQueue.submit(() -> {
-                                        //TODO
+                                        //TODO cancel when needed
                                         Date endDate = new Date();
                                         new SimpleDateFormat("hh:mm:ss");
-                                        String result = "OK";
+
+                                        String result = "UNKNOWN";
                                         if (e != null) {
                                             result = e.getClass().getSimpleName();
+                                        } else if (response != null) {
+                                            result = String.valueOf(response.message() + " (" + response.code() + ")");
                                         }
+
                                         addRow(String.valueOf(index), hostname,
                                                 new SimpleDateFormat("hh:mm:ss").format(startDate),
                                                 String.valueOf(endDate.getTime() - startDate.getTime()),
-                                                String.valueOf(currentPeriod), //TODO
+                                                String.valueOf(currentPeriodCopy), //TODO
                                                 result);
                                         if (isRunning) {
-                                            stageQueue.schedule(this::doPingServer, currentPeriod, TimeUnit.MILLISECONDS);
+                                            stageQueue.schedule(this::doPingServer, currentPeriodCopy, TimeUnit.MILLISECONDS);
                                         }
                                     });
                                 },
                                 hostname,
                                 currentSessionUUID,
-                                index);
+                                index,
+                                currentPort);
             } catch (Exception e) {
                 e.printStackTrace();
                 stop();

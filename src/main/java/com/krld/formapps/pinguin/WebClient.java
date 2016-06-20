@@ -25,14 +25,14 @@ public class WebClient {
         return instance;
     }
 
-    public void sendPing(Action3<Call, Response, Exception> completeCallback, String hostname, String sessionUUID, int index) {
+    public void sendPing(Action3<Call, Response, Exception> completeCallback, String hostname, String sessionUUID, int index, int port) {
         try {
             HashMap<String, Object> params = new HashMap<>();
             params.put("sessionUUID", sessionUUID);
             params.put("hostname", hostname);
             params.put("index", index);
 
-            post("http://" + hostname + ":9090/ping", new Gson().toJson(params), completeCallback);
+            post("http://" + hostname + ":" + port + "/ping", new Gson().toJson(params), completeCallback);
         } catch (Exception e) {
             e.printStackTrace();
             if (completeCallback != null) {
@@ -45,7 +45,7 @@ public class WebClient {
         RequestBody body = RequestBody.create(JSON, json);
         Request request = new Request.Builder()
                 .url(url)
-                .post(body)
+                .method("POST", body)
                 .build();
         client.newCall(request).enqueue(new Callback() {
             @Override
